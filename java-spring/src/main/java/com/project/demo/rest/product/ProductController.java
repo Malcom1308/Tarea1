@@ -35,21 +35,33 @@ public class ProductController {
                 request);
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     @PreAuthorize("isAuthenticated() && hasAnyRole('SUPER_ADMIN')")
-    public ResponseEntity<?> updateProduct(@RequestBody Product product, HttpServletRequest request) {
-        if(product.getId() == null || !productRepository.existsById(product.getId())) {
+    public ResponseEntity<?> updateProduct(@RequestBody Product product, @PathVariable Long id ,HttpServletRequest request) {
+        Product existingProduct = productRepository.findById(id).orElse(null);
+
+        if(existingProduct == null) {
             return new GlobalResponseHandler().handleResponse(
-                    "ID de producto no proporcionado o producto no encontrado para actualizar",
+                    "Product not found to update",
                     HttpStatus.NOT_FOUND,
-                    request);
+                    request
+            );
         }
-        Product productSaved = productRepository.save(product);
+
+        existingProduct.setName(product.getName());
+        existingProduct.setDescription(product.getDescription());
+        existingProduct.setCategory(product.getCategory());
+        existingProduct.setPrice(product.getPrice());
+        existingProduct.setQuantity(product.getQuantity());
+
+        Product productSaved = productRepository.save(existingProduct);
+
         return new GlobalResponseHandler().handleResponse(
-                "Product succesfully updated",
+                "Product successfully update",
                 productSaved,
                 HttpStatus.OK,
-                request);
+                request
+        );
     }
 
 

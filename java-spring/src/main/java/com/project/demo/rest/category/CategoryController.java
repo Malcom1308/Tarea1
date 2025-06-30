@@ -35,18 +35,27 @@ public class CategoryController {
                 request);
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     @PreAuthorize("isAuthenticated() && hasAnyRole('SUPER_ADMIN')")
-    public ResponseEntity<?> updateCategory(@RequestBody Category category, HttpServletRequest request) {
-            if(category.getId() == null || !categoryRepository.existsById(category.getId())) {
-                return new GlobalResponseHandler().handleResponse(
-                        "ID de categoria no proporcionado o categoria no encontrada para actualizar",
-                        HttpStatus.NOT_FOUND,
-                        request);
-            }
-            Category categorySaved = categoryRepository.save(category);
+    public ResponseEntity<?> updateCategory(@RequestBody Category category, @PathVariable Long id, HttpServletRequest request) {
+        Category existingCategory = categoryRepository.findById(id)
+                .orElse(null);
+
+        if (existingCategory == null) {
             return new GlobalResponseHandler().handleResponse(
-                "Category succesfully updated",
+                    "Category not found to update",
+                    HttpStatus.NOT_FOUND,
+                    request);
+        }
+
+
+        existingCategory.setName(category.getName());
+        existingCategory.setDescription(category.getDescription());
+
+        Category categorySaved = categoryRepository.save(existingCategory);
+
+        return new GlobalResponseHandler().handleResponse(
+                "Category successfully updated",
                 categorySaved,
                 HttpStatus.OK,
                 request);
